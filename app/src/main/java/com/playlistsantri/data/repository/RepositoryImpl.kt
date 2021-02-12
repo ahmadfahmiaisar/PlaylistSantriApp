@@ -1,6 +1,7 @@
 package com.playlistsantri.data.repository
 
 import com.playlistsantri.data.dispatcher.DispatcherProvider
+import com.playlistsantri.data.mapper.ArticleDetailMapper
 import com.playlistsantri.data.mapper.ArticleMapper
 import com.playlistsantri.data.source.ArticleRemoteDataSource
 import com.playlistsantri.data.vo.Result
@@ -13,6 +14,7 @@ class RepositoryImpl @Inject constructor(
     private val dispatcher: DispatcherProvider,
     private val articleRemoteDataSource: ArticleRemoteDataSource,
     private val articleMapper: ArticleMapper,
+    private val articleDetailMapper: ArticleDetailMapper
 ) : Repository {
     override suspend fun getArticles(): Result<List<Articles>> {
         val apiResult = articleRemoteDataSource.getArticles(dispatcher.io)
@@ -24,6 +26,12 @@ class RepositoryImpl @Inject constructor(
     }
 
     override suspend fun getArticleDetail(articleId: Int): Result<ArticleDetail> {
+        val apiResult = articleRemoteDataSource.getArticleDetail(dispatcher.io, articleId)
+        return when (apiResult) {
+            is Result.Success -> Result.Success(articleDetailMapper.map(apiResult.data))
+            is Result.Error -> Result.Error(apiResult.cause, apiResult.code, apiResult.errorMessage)
+            else -> Result.Error()
+        }
     }
 
 }
